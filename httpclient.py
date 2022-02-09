@@ -39,14 +39,30 @@ class HTTPResponse(object):
 
 class HTTPClient(object):
     def get_host(self,url):
+        url_parsed = urllib.parse.urlparse(url)
+
         try:
-            return urllib.parse.urlparse(url).netloc.split(":")[0]
+            # check if the url is a domain name or an ip
+            if ":" in url_parsed.netloc:
+                # url is an ip
+                return url_parsed.netloc.split(":")[0]
+            else:
+                # url is a domain name
+                return socket.gethostbyname(url_parsed.netloc)
         except:
             return None
 
     def get_port(self, url):
+        url_parsed = urllib.parse.urlparse(url)
+
         try:
-            return int(urllib.parse.urlparse(url).netloc.split(":")[1])
+            # check if the url is a domain name or an ip
+            if ":" in url_parsed.netloc:
+                # url is an ip
+                return int(url_parsed.netloc.split(":")[1])
+            else:
+                # url is a domain name
+                return 80
         except:
             return None
 
@@ -110,8 +126,8 @@ class HTTPClient(object):
         host = self.get_host(url)
         port = self.get_port(url)
 
-        # print("host: ", host)
-        # print("port: ", port)
+        print("host: ", host)
+        print("port: ", port)
 
         if host == None:
             return HTTPResponse(404, None)
@@ -120,19 +136,27 @@ class HTTPClient(object):
 
         url_parsed = urllib.parse.urlparse(url)
 
-        request = "GET {} HTTP/1.1\r\nHost: {}\r\n\r\n".format(url_parsed.path, url_parsed.netloc)
+        print("netloc: ", url_parsed.netloc)
+        print("path: ", url_parsed.path)
+
+        path = url_parsed.path
+
+        if path == "":
+            path = "/"
+
+        request = "GET {} HTTP/1.0\r\nHost: {}\r\n\r\n".format(path, url_parsed.netloc)
         self.sendall(request)
         data = self.recvall(self.socket)
 
         self.close()
 
-        # print(data)
+        print(data)
 
         code = self.get_code(data)
         body = self.get_body(data)
 
-        # print("code: ", code)
-        # print("body: ", body)
+        print("code: ", code)
+        print("body: ", body)
 
         return HTTPResponse(code, body)
 
@@ -150,16 +174,16 @@ class HTTPClient(object):
 
         url_parsed = urllib.parse.urlparse(url)
 
-        # post_data = {'a':'aaaaaaaaaaaaa',
-        #     'b':'bbbbbbbbbbbbbbbbbbbbbb',
-        #     'c':'c',
-        #     'd':'012345\r67890\n2321321\n\r'}
+        post_data = ""
 
-        post_data = "a=aaaaaaaaaaaaa&b=bbbbbbbbbbbbbbbbbbbbbb&c=c&d=012345\r67890\n2321321\n\r"
+        if args:
+            for arg in args:
+                post_data += "&" + arg+ "=" + args[arg]
 
         request = 'POST {} HTTP/1.1\r\nHost: {}\r\nContent-Type: \
             application/x-www-form-urlencoded\r\nContent-Length: {}\r\n\r\n{}'\
                 .format(url_parsed.path, url_parsed.netloc, len(post_data), post_data)
+        
         self.sendall(request)
         data = self.recvall(self.socket)
 
