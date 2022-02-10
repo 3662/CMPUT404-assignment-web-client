@@ -18,6 +18,7 @@
 # Write your own HTTP GET and POST
 # The point is to understand what you have to send and get experience with it
 
+from email import header
 from inspect import ArgSpec
 import sys
 import socket
@@ -28,6 +29,8 @@ import urllib.parse
 from urllib3 import get_host
 
 PORT = 80
+USER_AGENT = "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:96.0) Gecko/20100101 Firefox/96.0"
+CONTENT_TYPE = "application/x-www-form-urlencoded"
 
 def help():
     print("httpclient.py [GET/POST] [URL]\n")
@@ -44,10 +47,8 @@ class HTTPClient(object):
         try:
             # check if the url is a domain name or an ip
             if ":" in url_parsed.netloc:
-                # url is an ip
                 return url_parsed.netloc.split(":")[0]
             else:
-                # url is a domain name
                 return socket.gethostbyname(url_parsed.netloc)
         except:
             return None
@@ -58,11 +59,9 @@ class HTTPClient(object):
         try:
             # check if the url is a domain name or an ip
             if ":" in url_parsed.netloc:
-                # url is an ip
                 return int(url_parsed.netloc.split(":")[1])
             else:
-                # url is a domain name
-                return 80
+                return PORT
         except:
             return None
 
@@ -84,7 +83,7 @@ class HTTPClient(object):
         return None
 
     def get_body(self, data):
-        # body appears afte the headers
+        # body appears after the headers
         # the headers and body of an http response are separated by an empty line
         try:
             body_index = 0
@@ -114,10 +113,7 @@ class HTTPClient(object):
                 buffer.extend(part)
             else:
                 done = not part
-        # return buffer.decode('utf-8')
-        # try ascii instead of latin1
-        return buffer.decode('latin1')
-        # return buffer
+        return buffer.decode('utf-8')
 
     def GET(self, url, args=None):
         code = 500
@@ -126,9 +122,6 @@ class HTTPClient(object):
         host = self.get_host(url)
         port = self.get_port(url)
 
-        print("host: ", host)
-        print("port: ", port)
-
         if host == None:
             return HTTPResponse(404, None)
 
@@ -136,27 +129,27 @@ class HTTPClient(object):
 
         url_parsed = urllib.parse.urlparse(url)
 
-        print("netloc: ", url_parsed.netloc)
-        print("path: ", url_parsed.path)
-
         path = url_parsed.path
 
         if path == "":
             path = "/"
 
-        request = "GET {} HTTP/1.0\r\nHost: {}\r\n\r\n".format(path, url_parsed.netloc)
+        headers = ""
+        headers += "HTTP/1.0\r\n"
+        headers += "Host: {}\r\n".format(url_parsed.netloc)
+        headers += "User-Agent: {}\r\n".format(USER_AGENT)
+
+        request = "GET {} {}\r\n".format(path, headers)
         self.sendall(request)
         data = self.recvall(self.socket)
 
-        self.close()
-
+        # print result to stdout
         print(data)
+
+        self.close()
 
         code = self.get_code(data)
         body = self.get_body(data)
-
-        print("code: ", code)
-        print("body: ", body)
 
         return HTTPResponse(code, body)
 
@@ -172,6 +165,8 @@ class HTTPClient(object):
 
         self.connect(host, port)
 
+        print("connected")
+
         url_parsed = urllib.parse.urlparse(url)
 
         post_data = ""
@@ -180,12 +175,27 @@ class HTTPClient(object):
             for arg in args:
                 post_data += "&" + arg+ "=" + args[arg]
 
-        request = 'POST {} HTTP/1.1\r\nHost: {}\r\nContent-Type: \
-            application/x-www-form-urlencoded\r\nContent-Length: {}\r\n\r\n{}'\
-                .format(url_parsed.path, url_parsed.netloc, len(post_data), post_data)
+        path = url_parsed.path
+
+        if path == "":
+            path = "/"
+
+        headers = ""
+        headers += "HTTP/1.1\r\n"
+        headers += "Host: {}\r\n".format(url_parsed.netloc)
+        headers += "Content-Type: {}\r\n".format(CONTENT_TYPE)
+        headers += "Content-Length: {}\r\n".format(len(post_data.encode('utf-8')))
+        headers += "User-Agent: {}\r\n".format(USER_AGENT)
+
+        request = "POST {} {}\r\n{}".format(path, headers, post_data)
+
+        print("request: ", request)
         
         self.sendall(request)
         data = self.recvall(self.socket)
+
+        # print result to stdout
+        print(data)
 
         self.close()
 
