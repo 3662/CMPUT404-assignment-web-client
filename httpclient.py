@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
-# Copyright 2016 Abram Hindle, https://github.com/tywtyw2002, and https://github.com/treedust
+# Copyright 2022 Abram Hindle, https://github.com/tywtyw2002, 
+# https://github.com/treedust and Felipe Rodriguez Atuesta
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -181,7 +182,7 @@ class HTTPClient(object):
             path = "/"
 
         headers = ""
-        headers += "HTTP/1.1\r\n"
+        headers += "HTTP/1.0\r\n"
         headers += "Host: {}\r\n".format(url_parsed.netloc)
         headers += "Content-Type: {}\r\n".format(CONTENT_TYPE)
         headers += "Content-Length: {}\r\n".format(len(post_data.encode('utf-8')))
