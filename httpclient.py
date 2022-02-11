@@ -135,12 +135,25 @@ class HTTPClient(object):
         if path == "":
             path = "/"
 
+        query = ""
+
+        if args:
+            for arg in args:
+                if query == "":
+                    query += arg + "=" + args[arg]
+                else:
+                    query += "&" + arg + "=" + args[arg]
+
+        if query != "":
+            query = "?" + query
+
         headers = ""
-        headers += "HTTP/1.0\r\n"
+        headers += "HTTP/1.1\r\n"
         headers += "Host: {}\r\n".format(url_parsed.netloc)
         headers += "User-Agent: {}\r\n".format(USER_AGENT)
+        headers += "Connection: close\r\n"
 
-        request = "GET {} {}\r\n".format(path, headers)
+        request = "GET {} {}\r\n".format(path + query, headers)
         self.sendall(request)
         data = self.recvall(self.socket)
 
@@ -174,7 +187,10 @@ class HTTPClient(object):
 
         if args:
             for arg in args:
-                post_data += "&" + arg+ "=" + args[arg]
+                if post_data == "":
+                    post_data += arg + "=" + args[arg]
+                else:
+                    post_data += "&" + arg + "=" + args[arg]
 
         path = url_parsed.path
 
@@ -182,11 +198,12 @@ class HTTPClient(object):
             path = "/"
 
         headers = ""
-        headers += "HTTP/1.0\r\n"
+        headers += "HTTP/1.1\r\n"
         headers += "Host: {}\r\n".format(url_parsed.netloc)
         headers += "Content-Type: {}\r\n".format(CONTENT_TYPE)
         headers += "Content-Length: {}\r\n".format(len(post_data.encode('utf-8')))
         headers += "User-Agent: {}\r\n".format(USER_AGENT)
+        headers += "Connection: close\r\n"
 
         request = "POST {} {}\r\n{}".format(path, headers, post_data)
 
