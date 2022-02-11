@@ -14,9 +14,9 @@ Generally everything is LICENSE'D under the Apache 2 license by Abram Hindle,
 https://github.com/tywtyw2002, and https://github.com/treedust
 
 httpClient.py contains contributions from:
-Abram Hindle
+Abram Hindle,
 https://github.com/tywtyw2002, 
-https://github.com/treedust
+https://github.com/treedust and
 Felipe Rodriguez Atuesta
 
 But the server.py example is derived from the python documentation
