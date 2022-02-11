@@ -7,6 +7,11 @@ See requirements.org (plain-text) for a description of the project.
 
 Make a simple web-client like curl or wget
 
+Collaboration / External Source Code
+========================
+No collaborators for the assignment.
+No external source code was used for the assignment.
+
 Contributors / Licensing
 ========================
 
